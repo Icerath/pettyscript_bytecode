@@ -15,12 +15,12 @@ impl fmt::Display for Program {
                     let index_bytes = self.read_arr(head).unwrap();
                     let index = u32::from_le_bytes(index_bytes) as usize;
                     let constant = self.constants[index].clone();
-                    write!(f, "{index} {constant:?}")?;
+                    write!(f, " {index} {constant}")?;
                 }
                 OpCode::Jump | OpCode::PopJumpIfFalse => {
                     let index_bytes = self.read_arr(head).unwrap();
                     let index = u32::from_le_bytes(index_bytes) as usize;
-                    write!(f, "{index}")?;
+                    write!(f, " {index}")?;
                 }
                 _ => (),
             }
@@ -34,5 +34,23 @@ impl fmt::Display for Program {
 #[cfg(test)]
 #[test]
 fn test_dis() {
-    // TODO
+    let mut program = Program::new();
+
+    program.push_opcode(OpCode::NOP);
+    program.push_literal("Hello");
+    program.push_literal(3);
+    program.push_opcode(OpCode::Mul);
+
+    program.push_opcode(OpCode::Dup);
+
+    let dis = program.to_string();
+    assert_eq!(
+        dis,
+        r#"NOP
+LoadConst 0 'Hello'
+LoadConst 1 3
+Mul
+Dup
+"#
+    );
 }
