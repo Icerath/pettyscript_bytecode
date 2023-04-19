@@ -36,7 +36,7 @@ impl fmt::Display for Program {
 fn test_dis() {
     let mut program = Program::new();
 
-    program.push_opcode(OpCode::NOP);
+    program.push_opcode(OpCode::Nop);
     program.push_literal("Hello");
     program.push_literal(3);
     program.push_opcode(OpCode::Mul);
@@ -47,7 +47,7 @@ fn test_dis() {
     assert_eq!(
         dis,
         concat!(
-            "NOP\n",
+            "Nop\n",
             "LoadConst 0 'Hello'\n",
             "LoadConst 1 3\n",
             "Mul\n",

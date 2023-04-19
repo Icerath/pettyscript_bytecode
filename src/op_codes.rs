@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum OpCode {
-    NOP = 0,
+    Nop = 0,
     Dup,
     Pop,
     Jump,
@@ -30,7 +30,7 @@ impl OpCode {
     #[must_use]
     pub fn size_operand(self) -> usize {
         match self {
-            Self::NOP | Self::Dup | Self::Pop => 0,
+            Self::Nop | Self::Dup | Self::Pop => 0,
             Self::Add | Self::Sub | Self::Mul | Self::Div => 0,
             Self::Le | Self::Lt | Self::Ge | Self::Gt | Self::Eq | Self::Ne => 0,
 
