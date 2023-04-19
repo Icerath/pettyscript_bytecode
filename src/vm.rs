@@ -35,6 +35,14 @@ impl<'a> Vm<'a> {
         self.head += 1;
 
         match op_code {
+            OpCode::Nop => {}
+            OpCode::Dup => {
+                let top = self.stack.last().unwrap().clone();
+                self.stack.push(top);
+            }
+            OpCode::Pop => {
+                self.stack.pop();
+            }
             OpCode::Add => self.binop(Value::add),
             OpCode::Sub => self.binop(Value::sub),
             OpCode::Mul => self.binop(Value::mul),
