@@ -46,11 +46,12 @@ fn test_dis() {
     let dis = program.to_string();
     assert_eq!(
         dis,
-        r#"NOP
-LoadConst 0 'Hello'
-LoadConst 1 3
-Mul
-Dup
-"#
+        concat!(
+            "NOP\n",
+            "LoadConst 0 'Hello'\n",
+            "LoadConst 1 3\n",
+            "Mul\n",
+            "Dup\n",
+        )
     );
 }
