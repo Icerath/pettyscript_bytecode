@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     Int(i64),
     Float(f64),
@@ -42,6 +42,12 @@ impl From<&'static str> for Value {
 impl From<String> for Value {
     fn from(value: String) -> Self {
         Self::Str(Cow::Owned(value))
+    }
+}
+
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Self::Int(i64::from(value))
     }
 }
 

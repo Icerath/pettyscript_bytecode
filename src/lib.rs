@@ -5,6 +5,7 @@ pub mod dis;
 pub mod op_codes;
 pub mod program;
 pub mod value;
+pub mod vm;
 
 #[cfg(test)]
 mod tests;
