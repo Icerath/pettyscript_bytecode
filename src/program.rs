@@ -74,6 +74,20 @@ impl Program {
         self.patch_jump(jump);
     }
 
+    #[inline]
+    pub fn push_if_or_else<F1, F2>(&mut self, body: F1, orelse: F2)
+    where
+        F1: FnOnce(&mut Self),
+        F2: FnOnce(&mut Self),
+    {
+        let jump_if = self.push_pop_jump_if_false(0);
+        body(self);
+        let jump_else = self.push_jump(0);
+        self.patch_jump(jump_if);
+        orelse(self);
+        self.patch_jump(jump_else);
+    }
+
     #[must_use]
     #[inline]
     pub fn read_arr<const LEN: usize>(&self, from: usize) -> Option<[u8; LEN]> {

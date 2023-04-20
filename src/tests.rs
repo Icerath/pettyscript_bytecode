@@ -82,3 +82,43 @@ fn test_if_false() {
     let stack = vm::create_and_run(&program);
     assert_eq!(stack, vec![Value::from("World!")]);
 }
+
+#[test]
+fn test_if_else_true() {
+    let mut program = Program::new();
+
+    program.push_literal(1);
+    program.push_if_or_else(
+        |body| {
+            body.push_literal("Hello, ");
+        },
+        |or_else| {
+            or_else.push_literal("Goodbye, ");
+        },
+    );
+    program.push_literal("World!");
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::from("Hello, "), Value::from("World!")]);
+}
+
+#[test]
+fn test_if_else_false() {
+    let mut program = Program::new();
+
+    program.push_literal(0);
+    program.push_if_or_else(
+        |body| {
+            body.push_literal("Hello, ");
+        },
+        |or_else| {
+            or_else.push_literal("Goodbye, ");
+        },
+    );
+    program.push_literal("World!");
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::from("Goodbye, "), Value::from("World!")]);
+}
