@@ -52,9 +52,7 @@ impl<'a> Vm<'a> {
                 let top = self.stack.last().unwrap().clone();
                 self.stack.push(top);
             }
-            OpCode::Pop => {
-                self.stack.pop();
-            }
+            OpCode::Pop => _ = self.stack.pop(),
             OpCode::Add => self.binop(Value::add),
             OpCode::Sub => self.binop(Value::sub),
             OpCode::Mul => self.binop(Value::mul),
@@ -66,6 +64,11 @@ impl<'a> Vm<'a> {
             OpCode::Gt => self.binop(cmp(Value::gt)),
             OpCode::Eq => self.binop(cmp(Value::eq)),
             OpCode::Ne => self.binop(cmp(Value::ne)),
+
+            OpCode::UnaryNot => {
+                let val = !bool::from(&self.pop_stack());
+                self.stack.push(val.into());
+            }
 
             OpCode::LoadConst => {
                 let index = self.read_u32() as usize;

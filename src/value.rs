@@ -7,15 +7,12 @@ pub enum Value {
     Str(Cow<'static, str>),
 }
 
-#[derive(Debug)]
-pub struct InvalidBool;
-impl TryFrom<&Value> for bool {
-    type Error = InvalidBool;
-    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+impl From<&Value> for bool {
+    fn from(value: &Value) -> Self {
         match value {
-            Value::Int(int) => Ok(*int != 0),
-            Value::Str(str) => Ok(str.is_empty()),
-            Value::Float(float) => Ok(*float != 0.0),
+            Value::Int(int) => *int != 0,
+            Value::Str(str) => str.is_empty(),
+            Value::Float(float) => *float != 0.0,
         }
     }
 }
