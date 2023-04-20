@@ -28,6 +28,8 @@ pub enum OpCode {
     StoreName,
     LoadName,
 
+    LoadBuiltin,
+
     PopJumpIfFalse,
 
     StopCode,
@@ -42,6 +44,8 @@ impl OpCode {
             Self::PrepareFuncCall | Self::Ret => 0,
             Self::Add | Self::Sub | Self::Mul | Self::Div | Self::UnaryNot => 0,
             Self::Le | Self::Lt | Self::Ge | Self::Gt | Self::Eq | Self::Ne => 0,
+
+            Self::LoadBuiltin => 1,
 
             Self::LoadConst | Self::StoreName | Self::LoadName => 4,
             Self::PopJumpIfFalse | Self::Jump => 4,

@@ -1,9 +1,14 @@
-use crate::{cursor::Cursor, op_codes::OpCode, program::Program};
+use std::collections::HashMap;
+
+use crate::{builtins::Builtin, cursor::Cursor, op_codes::OpCode, program::Program};
 
 #[must_use]
 pub fn assemble(input: &str) -> Program {
     let tokens = tokenize(input);
     let mut program = Program::new();
+    let mut functions: HashMap<&str, usize> = HashMap::default();
+
+    load_builtins(&mut program, &mut functions);
 
     for token in tokens {
         match token {
@@ -24,10 +29,25 @@ pub fn assemble(input: &str) -> Program {
             Token::Int(int) => _ = program.push_literal(int),
             Token::Float(float) => _ = program.push_literal(float),
             Token::Str(str) => _ = program.push_literal(str.to_owned()),
+
+            Token::Ident(name) => program.call_func(functions[name]),
+            Token::DefFunc(_) => todo!(),
+            Token::End => unreachable!(),
         }
     }
 
     program
+}
+
+fn load_builtins(program: &mut Program, functions: &mut HashMap<&str, usize>) {
+    let jump_end = program.push_jump(0);
+    let builtins = [("print", Builtin::Print)];
+    for (name, variant) in builtins {
+        let func = program.push_builtin(variant);
+        program.push_opcode(OpCode::Ret);
+        functions.insert(name, func);
+    }
+    program.patch_jump(jump_end);
 }
 
 #[derive(Debug)]
@@ -51,6 +71,10 @@ pub enum Token<'a> {
     Ge,
     Gt,
     Eq,
+
+    Ident(&'a str),
+    DefFunc(&'a str),
+    End,
 }
 
 pub fn tokenize(input: &str) -> impl Iterator<Item = Token> {
@@ -89,6 +113,7 @@ impl<'a> Cursor<'a> {
 
             '0'..='9' => self.parse_num(start),
             '"' => self.parse_string(),
+            _ if ch.is_alphabetic() => self.parse_ident(start),
             _ => todo!("({ch})"),
         };
         Some(token)
@@ -115,6 +140,11 @@ impl<'a> Cursor<'a> {
         let string = &self.text[start..self.head];
         self.bump();
         Token::Str(string)
+    }
+
+    fn parse_ident(&mut self, start: usize) -> Token<'a> {
+        self.take_while(char::is_alphanumeric);
+        Token::Ident(&self.text[start..self.head])
     }
 
     fn whitespace(&mut self) -> Token<'a> {

@@ -1,4 +1,4 @@
-use crate::{op_codes::OpCode, program::Program, value::Value};
+use crate::{builtins::Builtin, op_codes::OpCode, program::Program, value::Value};
 use std::{
     collections::HashMap,
     ops::{Add, Div, Mul, Sub},
@@ -97,10 +97,32 @@ impl<'a> Vm<'a> {
                 let val = self.variables.get(ident).unwrap().clone();
                 self.stack.push(val);
             }
+            OpCode::LoadBuiltin => {
+                let builtin = Builtin::try_from(self.bytes[self.head]).unwrap();
+                self.run_builtin(builtin);
+            }
             OpCode::StopCode => unreachable!(),
         }
 
         self.head += op_code.size_operand();
+    }
+    #[allow(clippy::cast_possible_truncation)]
+    fn run_builtin(&mut self, builtin: Builtin) {
+        match builtin {
+            Builtin::Print => {
+                let val = self.pop_stack();
+                println!("{val}");
+            }
+            Builtin::Exit => {
+                let val = self.stack.pop().unwrap_or(Value::Int(0));
+                let code = match val {
+                    Value::Int(val) => val as i32,
+                    Value::Float(float) => float as i32,
+                    Value::Str(_) => 0,
+                };
+                std::process::exit(code);
+            }
+        }
     }
     fn pop_stack(&mut self) -> Value {
         self.stack.pop().expect("Failed to pop from stack.")

@@ -1,4 +1,4 @@
-use crate::{op_codes::OpCode, value::Value};
+use crate::{builtins::Builtin, op_codes::OpCode, value::Value};
 use std::ops::Deref;
 
 #[derive(Debug, Default, Clone)]
@@ -67,6 +67,12 @@ impl Program {
     pub fn call_func(&mut self, func: usize) {
         self.bytes.push(OpCode::PrepareFuncCall as u8);
         self.push_jump(func);
+    }
+    #[inline]
+    pub fn push_builtin(&mut self, builtin: Builtin) -> usize {
+        self.bytes.push(OpCode::LoadBuiltin as u8);
+        self.bytes.push(builtin as u8);
+        self.len() - 2
     }
     /// # Panics
     /// Panics If `OpCode` has a non-zero size.
