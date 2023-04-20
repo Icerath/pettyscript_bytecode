@@ -64,6 +64,16 @@ impl Program {
         let slice = &mut self.bytes[jump..jump + 4];
         slice.copy_from_slice(&u32::try_from(here).unwrap().to_le_bytes());
     }
+    #[inline]
+    pub fn push_if<F>(&mut self, body: F)
+    where
+        F: FnOnce(&mut Self),
+    {
+        let jump = self.push_pop_jump_if_false(0);
+        body(self);
+        self.patch_jump(jump);
+    }
+
     #[must_use]
     #[inline]
     pub fn read_arr<const LEN: usize>(&self, from: usize) -> Option<[u8; LEN]> {
