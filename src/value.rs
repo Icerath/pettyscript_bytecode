@@ -8,6 +8,7 @@ pub enum Value {
     Function(usize),
 }
 
+#[derive(Debug)]
 pub struct InvalidBool;
 impl TryFrom<&Value> for bool {
     type Error = InvalidBool;

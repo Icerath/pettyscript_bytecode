@@ -60,8 +60,14 @@ impl<'a> Vm<'a> {
                 let value = self.constants[index].clone();
                 self.stack.push(value);
             }
-
-            _ => todo!("{op_code:?}"),
+            OpCode::Jump => return self.head = self.read_u32() as usize,
+            OpCode::PopJumpIfFalse => {
+                let should_jump = !bool::try_from(&self.pop_stack()).unwrap();
+                if should_jump {
+                    return self.head = self.read_u32() as usize;
+                }
+            }
+            OpCode::StopCode => unreachable!(),
         }
 
         self.head += op_code.size_operand();

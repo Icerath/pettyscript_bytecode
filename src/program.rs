@@ -41,6 +41,29 @@ impl Program {
         assert_eq!(opcode.size_operand(), 0);
         self.bytes.push(opcode as u8);
     }
+    #[inline]
+    pub fn push_u32(&mut self, val: u32) {
+        let bytes = val.to_le_bytes();
+        self.bytes.extend_from_slice(&bytes);
+    }
+    #[inline]
+    pub fn push_jump(&mut self, index: usize) -> usize {
+        self.bytes.push(OpCode::Jump as u8);
+        self.push_u32(u32::try_from(index).unwrap());
+        self.len() - 4
+    }
+    #[inline]
+    pub fn push_pop_jump_if_false(&mut self, index: usize) -> usize {
+        self.bytes.push(OpCode::PopJumpIfFalse as u8);
+        self.push_u32(u32::try_from(index).unwrap());
+        self.len() - 4
+    }
+    #[inline]
+    pub fn patch_jump(&mut self, jump: usize) {
+        let here = self.len();
+        let slice = &mut self.bytes[jump..jump + 4];
+        slice.copy_from_slice(&u32::try_from(here).unwrap().to_le_bytes());
+    }
     #[must_use]
     #[inline]
     pub fn read_arr<const LEN: usize>(&self, from: usize) -> Option<[u8; LEN]> {
