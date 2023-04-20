@@ -72,11 +72,10 @@ impl<'a> Vm<'a> {
 
         self.head += op_code.size_operand();
     }
-    pub fn pop_stack(&mut self) -> Value {
+    fn pop_stack(&mut self) -> Value {
         self.stack.pop().expect("Failed to pop from stack.")
     }
-    #[inline]
-    pub fn binop<F>(&mut self, func: F)
+    fn binop<F>(&mut self, func: F)
     where
         F: FnOnce(Value, Value) -> Value,
     {
@@ -84,11 +83,9 @@ impl<'a> Vm<'a> {
         let lhs = self.pop_stack();
         self.stack.push(func(lhs, rhs));
     }
-    #[inline]
     fn read_u32(&self) -> u32 {
         u32::from_le_bytes(self.read_arr())
     }
-    #[inline]
     fn read_arr<const LEN: usize>(&self) -> [u8; LEN] {
         let slice = &self.bytes[self.head..self.head + LEN];
         slice.try_into().unwrap()
@@ -96,7 +93,6 @@ impl<'a> Vm<'a> {
 }
 
 ///
-#[inline]
 fn cmp<F>(func: F) -> impl FnOnce(Value, Value) -> Value
 where
     F: FnOnce(&Value, &Value) -> bool,
