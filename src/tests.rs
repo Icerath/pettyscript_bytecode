@@ -159,3 +159,21 @@ fn test_load_store_name() {
     let stack = vm::create_and_run(&program);
     assert_eq!(stack, vec![Value::Int(1), Value::Int(1)]);
 }
+
+#[test]
+fn test_func_call() {
+    let mut program = Program::new();
+
+    let func = program.push_func(|func| {
+        func.push_literal(1);
+        func.push_opcode(OpCode::Add);
+    });
+
+    program.push_literal(3);
+    program.call_func(func);
+    program.push_literal(2);
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::Int(4), Value::Int(2)]);
+}

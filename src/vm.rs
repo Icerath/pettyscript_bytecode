@@ -10,6 +10,7 @@ pub struct Vm<'a> {
     stack: Vec<Value>,
     idents: &'a [String],
     variables: HashMap<&'a str, Value>,
+    call_stack: Vec<usize>,
     head: usize,
 }
 
@@ -29,6 +30,7 @@ impl<'a> From<&'a Program> for Vm<'a> {
 
             variables: HashMap::default(),
             stack: vec![],
+            call_stack: vec![],
             head: 0,
         }
     }
@@ -77,6 +79,8 @@ impl<'a> Vm<'a> {
                     return self.head = self.read_u32() as usize;
                 }
             }
+            OpCode::Ret => self.head = self.call_stack.pop().unwrap(),
+            OpCode::PrepareFuncCall => self.call_stack.push(self.head + 5),
             OpCode::StoreName => {
                 let top = self.pop_stack();
 

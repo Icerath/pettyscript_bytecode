@@ -6,6 +6,9 @@ pub enum OpCode {
     Pop,
     Jump,
 
+    Ret,
+    PrepareFuncCall,
+
     Add,
     Sub,
     Mul,
@@ -34,6 +37,7 @@ impl OpCode {
     pub fn size_operand(self) -> usize {
         match self {
             Self::Nop | Self::Dup | Self::Pop => 0,
+            Self::PrepareFuncCall | Self::Ret => 0,
             Self::Add | Self::Sub | Self::Mul | Self::Div => 0,
             Self::Le | Self::Lt | Self::Ge | Self::Gt | Self::Eq | Self::Ne => 0,
 

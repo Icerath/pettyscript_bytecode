@@ -51,6 +51,23 @@ impl Program {
 
         index
     }
+    #[inline]
+    pub fn push_func<F>(&mut self, func: F) -> usize
+    where
+        F: FnOnce(&mut Self),
+    {
+        let jump_end = self.push_jump(0);
+        let index = self.len();
+        func(self);
+        self.bytes.push(OpCode::Ret as u8);
+        self.patch_jump(jump_end);
+        index
+    }
+    #[inline]
+    pub fn call_func(&mut self, func: usize) {
+        self.bytes.push(OpCode::PrepareFuncCall as u8);
+        self.push_jump(func);
+    }
     /// # Panics
     /// Panics If `OpCode` has a non-zero size.
     #[inline]

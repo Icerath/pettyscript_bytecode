@@ -5,7 +5,6 @@ pub enum Value {
     Int(i64),
     Float(f64),
     Str(Cow<'static, str>),
-    Function(usize),
 }
 
 #[derive(Debug)]
@@ -17,7 +16,6 @@ impl TryFrom<&Value> for bool {
             Value::Int(int) => Ok(*int != 0),
             Value::Str(str) => Ok(str.is_empty()),
             Value::Float(float) => Ok(*float != 0.0),
-            Value::Function(_) => Err(InvalidBool),
         }
     }
 }
@@ -58,7 +56,6 @@ impl fmt::Display for Value {
             Self::Int(int) => write!(f, "{int}"),
             Self::Float(float) => write!(f, "{float}"),
             Self::Str(str) => write!(f, "'{str}'"),
-            Self::Function(index) => write!(f, "func({index})"),
         }
     }
 }
