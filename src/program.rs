@@ -88,6 +88,20 @@ impl Program {
         self.patch_jump(jump_else);
     }
 
+    #[inline]
+    pub fn push_while_loop<F1, F2>(&mut self, condition: F1, body: F2)
+    where
+        F1: FnOnce(&mut Self),
+        F2: FnOnce(&mut Self),
+    {
+        let start = self.len();
+        condition(self);
+        let end = self.push_pop_jump_if_false(0);
+        body(self);
+        self.push_jump(start);
+        self.patch_jump(end);
+    }
+
     #[must_use]
     #[inline]
     pub fn read_arr<const LEN: usize>(&self, from: usize) -> Option<[u8; LEN]> {

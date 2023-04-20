@@ -122,3 +122,26 @@ fn test_if_else_false() {
     let stack = vm::create_and_run(&program);
     assert_eq!(stack, vec![Value::from("Goodbye, "), Value::from("World!")]);
 }
+
+#[test]
+fn test_while_loop() {
+    let mut program = Program::new();
+
+    program.push_literal(0);
+
+    program.push_while_loop(
+        |condition| {
+            condition.push_opcode(OpCode::Dup);
+            condition.push_literal(10);
+            condition.push_opcode(OpCode::Lt);
+        },
+        |body| {
+            body.push_literal(1);
+            body.push_opcode(OpCode::Add);
+        },
+    );
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::Int(10)]);
+}
