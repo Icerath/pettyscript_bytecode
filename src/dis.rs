@@ -6,10 +6,12 @@ impl fmt::Display for Program {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut head = 0;
         while head < self.len() {
+            write!(f, "{head}")?;
+
             let op_code = OpCode::try_from(self[head]).unwrap();
             head += 1;
 
-            write!(f, "{op_code:?}")?;
+            write!(f, " {op_code:?}")?;
             match op_code {
                 OpCode::LoadConst => {
                     let index_bytes = self.read_arr(head).unwrap();
@@ -47,11 +49,11 @@ fn test_dis() {
     assert_eq!(
         dis,
         concat!(
-            "Nop\n",
-            "LoadConst 0 'Hello'\n",
-            "LoadConst 1 3\n",
-            "Mul\n",
-            "Dup\n",
+            "0 Nop\n",
+            "1 LoadConst 0 'Hello'\n",
+            "6 LoadConst 1 3\n",
+            "11 Mul\n",
+            "12 Dup\n",
         )
     );
 }
