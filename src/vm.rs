@@ -1,30 +1,40 @@
 use crate::{op_codes::OpCode, program::Program, value::Value};
-use std::ops::{Add, Div, Mul, Sub};
+use std::{
+    collections::HashMap,
+    ops::{Add, Div, Mul, Sub},
+};
 
 pub struct Vm<'a> {
     bytes: &'a [u8],
     constants: &'a [Value],
     stack: Vec<Value>,
+    idents: &'a [String],
+    variables: HashMap<&'a str, Value>,
     head: usize,
 }
 
 #[allow(clippy::must_use_candidate)]
 pub fn create_and_run(program: &Program) -> Vec<Value> {
-    let mut vm = Vm::new(&program.bytes, &program.constants);
+    let mut vm = Vm::from(program);
     vm.run();
     vm.stack
 }
 
-impl<'a> Vm<'a> {
-    #[must_use]
-    pub fn new(bytes: &'a [u8], constants: &'a [Value]) -> Self {
+impl<'a> From<&'a Program> for Vm<'a> {
+    fn from(value: &'a Program) -> Self {
         Self {
-            bytes,
-            constants,
+            bytes: &value.bytes,
+            constants: &value.constants,
+            idents: &value.idents,
+
+            variables: HashMap::default(),
             stack: vec![],
             head: 0,
         }
     }
+}
+
+impl<'a> Vm<'a> {
     pub fn run(&mut self) {
         while self.head < self.bytes.len() {
             self.run_next();
@@ -66,6 +76,19 @@ impl<'a> Vm<'a> {
                 if should_jump {
                     return self.head = self.read_u32() as usize;
                 }
+            }
+            OpCode::StoreName => {
+                let top = self.pop_stack();
+
+                let index = self.read_u32() as usize;
+                let ident: &'a str = &self.idents[index];
+                self.variables.insert(ident, top);
+            }
+            OpCode::LoadName => {
+                let index = self.read_u32() as usize;
+                let ident: &str = &self.idents[index];
+                let val = self.variables.get(ident).unwrap().clone();
+                self.stack.push(val);
             }
             OpCode::StopCode => unreachable!(),
         }

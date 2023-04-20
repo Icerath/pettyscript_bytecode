@@ -5,6 +5,7 @@ use std::ops::Deref;
 pub struct Program {
     pub bytes: Vec<u8>,
     pub constants: Vec<Value>,
+    pub idents: Vec<String>,
 }
 
 impl Program {
@@ -16,14 +17,7 @@ impl Program {
     pub fn load_const(&mut self, value: Value) -> usize {
         self.bytes.push(OpCode::LoadConst as u8);
 
-        let index = self
-            .constants
-            .iter()
-            .position(|val| val == &value)
-            .unwrap_or_else(|| {
-                self.constants.push(value);
-                self.constants.len() - 1
-            });
+        let index = insert_vec(&mut self.constants, value);
 
         let index_u32 = u32::try_from(index).unwrap();
         self.bytes.extend_from_slice(&index_u32.to_le_bytes());
@@ -33,6 +27,29 @@ impl Program {
     #[inline]
     pub fn push_literal<V: Into<Value>>(&mut self, value: V) -> usize {
         self.load_const(value.into())
+    }
+    #[inline]
+    pub fn store_name(&mut self, name: impl Into<String>) -> usize {
+        self.bytes.push(OpCode::StoreName as u8);
+        let name = name.into();
+        let index = insert_vec(&mut self.idents, name);
+
+        let index_u32 = u32::try_from(index).unwrap();
+        self.bytes.extend_from_slice(&index_u32.to_le_bytes());
+
+        index
+    }
+    #[inline]
+    pub fn load_name(&mut self, name: impl Into<String>) -> usize {
+        self.bytes.push(OpCode::LoadName as u8);
+
+        let name = name.into();
+        let index = insert_vec(&mut self.idents, name);
+
+        let index_u32 = u32::try_from(index).unwrap();
+        self.bytes.extend_from_slice(&index_u32.to_le_bytes());
+
+        index
     }
     /// # Panics
     /// Panics If `OpCode` has a non-zero size.
@@ -115,4 +132,11 @@ impl Deref for Program {
     fn deref(&self) -> &Self::Target {
         &self.bytes
     }
+}
+
+fn insert_vec<T: PartialOrd>(vec: &mut Vec<T>, value: T) -> usize {
+    vec.iter().position(|val| val == &value).unwrap_or_else(|| {
+        vec.push(value);
+        vec.len() - 1
+    })
 }

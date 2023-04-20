@@ -145,3 +145,17 @@ fn test_while_loop() {
     let stack = vm::create_and_run(&program);
     assert_eq!(stack, vec![Value::Int(10)]);
 }
+
+#[test]
+fn test_load_store_name() {
+    let mut program = Program::new();
+
+    program.push_literal(1);
+    program.store_name("x");
+    program.load_name("x");
+    program.load_name("x");
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::Int(1), Value::Int(1)]);
+}

@@ -20,6 +20,9 @@ pub enum OpCode {
 
     LoadConst,
 
+    StoreName,
+    LoadName,
+
     PopJumpIfFalse,
 
     StopCode,
@@ -34,7 +37,7 @@ impl OpCode {
             Self::Add | Self::Sub | Self::Mul | Self::Div => 0,
             Self::Le | Self::Lt | Self::Ge | Self::Gt | Self::Eq | Self::Ne => 0,
 
-            Self::LoadConst => 4,
+            Self::LoadConst | Self::StoreName | Self::LoadName => 4,
             Self::PopJumpIfFalse | Self::Jump => 4,
             Self::StopCode => 0,
         }
