@@ -47,10 +47,20 @@ impl<'a> Vm<'a> {
         self.head += 1;
 
         match op_code {
-            OpCode::Nop => {}
             OpCode::Dup => {
                 let top = self.stack.last().unwrap().clone();
                 self.stack.push(top);
+            }
+            OpCode::Swap => {
+                let len = self.stack.len();
+                self.stack.swap(len - 1, len - 2);
+            }
+            OpCode::DupSwap => {
+                let top = self.stack.last().unwrap().clone();
+                self.stack.push(top);
+
+                let len = self.stack.len();
+                self.stack.swap(len - 2, len - 3);
             }
             OpCode::Pop => _ = self.stack.pop(),
             OpCode::Add => self.binop(Value::add),
@@ -101,7 +111,8 @@ impl<'a> Vm<'a> {
                 let builtin = Builtin::try_from(self.bytes[self.head]).unwrap();
                 self.run_builtin(builtin);
             }
-            OpCode::StopCode => unreachable!(),
+            OpCode::StopCode => unreachable!("StopCode"),
+            OpCode::Nop => unreachable!("Nop"),
         }
 
         self.head += op_code.size_operand();

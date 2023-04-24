@@ -4,6 +4,9 @@ pub enum OpCode {
     Nop = 0,
     Dup,
     Pop,
+    Swap,
+    DupSwap,
+
     Jump,
 
     Ret,
@@ -40,7 +43,7 @@ impl OpCode {
     #[must_use]
     pub fn size_operand(self) -> usize {
         match self {
-            Self::Nop | Self::Dup | Self::Pop => 0,
+            Self::Nop | Self::Dup | Self::Pop | Self::Swap | Self::DupSwap => 0,
             Self::PrepareFuncCall | Self::Ret => 0,
             Self::Add | Self::Sub | Self::Mul | Self::Div | Self::UnaryNot => 0,
             Self::Le | Self::Lt | Self::Ge | Self::Gt | Self::Eq | Self::Ne => 0,
@@ -55,16 +58,16 @@ impl OpCode {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct InvalidOpCode;
+pub struct InvalidOpCode(u8);
 
 impl TryFrom<u8> for OpCode {
     type Error = InvalidOpCode;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         if value >= Self::StopCode as u8 {
-            return Err(InvalidOpCode);
+            return Err(InvalidOpCode(value));
         }
         // # Safety:
         // OpCode is repr(u8) and value is guaranteed to be < OpCode's last variant.
-        unsafe { std::mem::transmute(value) }
+        Ok(unsafe { std::mem::transmute(value) })
     }
 }

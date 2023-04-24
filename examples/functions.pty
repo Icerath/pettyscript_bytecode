@@ -1,0 +1,31 @@
+// TODO
+
+//
+// function calcProduct(max) {
+//   product = 1;
+//   i = 0;
+//   while i < max {
+//     i += 1;
+//     product *= i;
+//   }
+//   return product
+// }
+
+
+@calcProduct fn
+    "max" store // max = [top of stack]
+    1 "product" store // product = 1
+    0 // i = 0
+    @start
+        // i < max
+        dup 0 load < ?end
+        // i += 1
+        1 +
+        // product *= i
+        dup 1 load * 1 store
+        $start
+    @end
+    pop // remove i
+    "product" load 
+    pop_var_buf
+    ret

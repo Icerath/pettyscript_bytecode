@@ -147,6 +147,39 @@ fn test_while_loop() {
 }
 
 #[test]
+fn while_range_product() {
+    let mut program = Program::new();
+
+    //product = 1
+    program.push_literal(1);
+    // i = 0
+    program.push_literal(0);
+    program.push_while_loop(
+        // i < 10
+        |condition| {
+            condition.push_opcode(OpCode::Dup);
+            condition.push_literal(5);
+            condition.push_opcode(OpCode::Lt);
+        },
+        |body| {
+            // i += 1
+            body.push_literal(1);
+            body.push_opcode(OpCode::Add);
+            // product *= i
+            {
+                body.push_opcode(OpCode::DupSwap);
+                body.push_opcode(OpCode::Mul);
+                body.push_opcode(OpCode::Swap);
+            }
+        },
+    );
+
+    eprintln!("{program}");
+    let stack = vm::create_and_run(&program);
+    assert_eq!(stack, vec![Value::Int(5 * 4 * 3 * 2), Value::Int(5)]);
+}
+
+#[test]
 fn test_load_store_name() {
     let mut program = Program::new();
 

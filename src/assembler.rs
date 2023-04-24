@@ -1,14 +1,19 @@
 use std::collections::HashMap;
 
-use crate::{builtins::Builtin, cursor::Cursor, op_codes::OpCode, program::Program};
+use crate::{cursor::Cursor, op_codes::OpCode, program::Program};
 
 #[must_use]
-pub fn assemble(input: &str) -> Program {
+pub fn compile_str(input: &str) -> Program {
     let tokens = tokenize(input);
-    let mut program = Program::new();
-    let mut functions: HashMap<&str, usize> = HashMap::default();
+    compile_tokens(tokens)
+}
 
-    load_builtins(&mut program, &mut functions);
+#[must_use]
+pub fn compile_tokens<'a, I: Iterator<Item = Token<'a>>>(tokens: I) -> Program {
+    let mut program = Program::new();
+
+    let mut jumps: HashMap<&str, usize> = HashMap::default();
+    let mut incomplete_jumps: HashMap<&str, Vec<usize>> = HashMap::default();
 
     for token in tokens {
         match token {
@@ -30,24 +35,43 @@ pub fn assemble(input: &str) -> Program {
             Token::Float(float) => _ = program.push_literal(float),
             Token::Str(str) => _ = program.push_literal(str.to_owned()),
 
-            Token::Ident(name) => program.call_func(functions[name]),
-            Token::DefFunc(_) => todo!(),
+            Token::Jump(str) => {
+                let location = jumps.get(str).copied().unwrap_or(0);
+                let jump = program.push_jump(location);
+                if jumps.get(str).is_none() {
+                    incomplete_jumps.entry(str).or_default().push(jump);
+                }
+            }
+
+            Token::OptJump(str) => {
+                let location = jumps.get(str).copied().unwrap_or(0);
+                let jump = program.push_pop_jump_if_false(location);
+                if jumps.get(str).is_none() {
+                    incomplete_jumps.entry(str).or_default().push(jump);
+                }
+            }
+
+            Token::Flag(str) => {
+                assert!(!jumps.contains_key(str));
+                jumps.insert(str, program.len());
+                if let Some(to_patch) = incomplete_jumps.get(str) {
+                    for jump in to_patch {
+                        program.patch_jump(*jump);
+                    }
+                    incomplete_jumps.remove(str);
+                }
+            }
+            Token::Keyword("ret") => program.push_opcode(OpCode::Ret),
+            Token::Keyword("pop") => program.push_opcode(OpCode::Pop),
+            Token::Keyword("swap") => program.push_opcode(OpCode::Swap),
+            Token::Keyword("dup") => program.push_opcode(OpCode::Dup),
+            Token::Keyword("dup_swap") => program.push_opcode(OpCode::DupSwap),
+            Token::Keyword(keyword) => todo!("{keyword}"),
             Token::End => unreachable!(),
         }
     }
 
     program
-}
-
-fn load_builtins(program: &mut Program, functions: &mut HashMap<&str, usize>) {
-    let jump_end = program.push_jump(0);
-    let builtins = [("print", Builtin::Print)];
-    for (name, variant) in builtins {
-        let func = program.push_builtin(variant);
-        program.push_opcode(OpCode::Ret);
-        functions.insert(name, func);
-    }
-    program.patch_jump(jump_end);
 }
 
 #[derive(Debug)]
@@ -72,14 +96,18 @@ pub enum Token<'a> {
     Gt,
     Eq,
 
-    Ident(&'a str),
-    DefFunc(&'a str),
+    Keyword(&'a str),
+    Flag(&'a str),
+    Jump(&'a str),
+    OptJump(&'a str),
+
     End,
 }
 
 pub fn tokenize(input: &str) -> impl Iterator<Item = Token> {
     let mut cursor = Cursor::new(input);
     std::iter::from_fn(move || cursor.next_token())
+        .filter(|tok| !matches!(tok, Token::Whitespace | Token::Comment))
 }
 
 pub fn filter_tokenize(input: &str) -> impl Iterator<Item = Token> {
@@ -88,7 +116,6 @@ pub fn filter_tokenize(input: &str) -> impl Iterator<Item = Token> {
 
 impl<'a> Cursor<'a> {
     fn next_token(&mut self) -> Option<Token<'a>> {
-        let start = self.head;
         let ch = self.bump()?;
         let token = match ch {
             _ if ch.is_whitespace() => self.whitespace(),
@@ -111,9 +138,14 @@ impl<'a> Cursor<'a> {
             '=' => Token::Eq,
             '!' => Token::Not,
 
-            '0'..='9' => self.parse_num(start),
+            '0'..='9' => self.parse_num(self.head - 1),
             '"' => self.parse_string(),
-            _ if ch.is_alphabetic() => self.parse_ident(start),
+
+            '@' => Token::Flag(self.parse_ident(self.head)),
+            '$' => Token::Jump(self.parse_ident(self.head)),
+            '?' => Token::OptJump(self.parse_ident(self.head)),
+
+            _ if ch.is_alphabetic() => Token::Keyword(self.parse_ident(self.head - 1)),
             _ => todo!("({ch})"),
         };
         Some(token)
@@ -142,11 +174,10 @@ impl<'a> Cursor<'a> {
         Token::Str(string)
     }
 
-    fn parse_ident(&mut self, start: usize) -> Token<'a> {
-        self.take_while(char::is_alphanumeric);
-        Token::Ident(&self.text[start..self.head])
+    fn parse_ident(&mut self, start: usize) -> &'a str {
+        self.take_while(|ch| ch.is_alphanumeric() || ch == '_');
+        &self.text[start..self.head]
     }
-
     fn whitespace(&mut self) -> Token<'a> {
         self.take_while(|c| c.is_ascii_whitespace());
         Token::Whitespace
